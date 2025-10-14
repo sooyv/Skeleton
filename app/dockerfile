@@ -1,0 +1,25 @@
+# 1. 빌드용 이미지
+FROM gradle:8.3-jdk20 AS build
+WORKDIR ./
+
+# 프로젝트 파일 복사
+COPY --chown=gradle:gradle . ./
+
+# Gradle 빌드
+RUN gradle clean build --no-daemon
+
+# 2. 실행용 이미지
+FROM eclipse-temurin:20-jre-alpine
+WORKDIR /app
+
+# 빌드 산출물 복사
+COPY ./build/libs/app.jar app.jar
+
+# JVM 옵션 (선택)
+ENV JAVA_OPTS="-Xms256m -Xmx512m"
+
+# 포트 노출
+EXPOSE 8080
+
+# 애플리케이션 실행
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

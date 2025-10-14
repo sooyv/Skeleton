@@ -6,15 +6,19 @@ plugins {
 }
 
 group = "org.example"
-version = "1.0-SNAPSHOT"
+version = ""
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
+    implementation("org.apache.commons:commons-lang3:3.18.0")
+
 
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
