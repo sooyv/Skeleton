@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: ../dockerfile
+    container_name: springboot-app
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://skeleton_user:qlqjs1212@localhost:27017/skeleton
+    depends_on:
+      - mongo
+
+volumes:
+  mongo-data:
+
