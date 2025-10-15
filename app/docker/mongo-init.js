@@ -1,6 +1,7 @@
 db = db.getSiblingDB('admin');
+db.auth("init", "initpw");
 db.system.users.update({"user":"init"}, {$set:{"user":"mongo_root"}})
-db.changeUserPassword('mongo_root', 'mongoDkagh#2')
+db.changeUserPassword('mongo_root', 'mongo_pwd')
 
 db = db.getSiblingDB("skeleton"); // skeleton DB 선택/생성
 
