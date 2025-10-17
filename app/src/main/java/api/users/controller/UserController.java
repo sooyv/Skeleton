@@ -3,7 +3,6 @@ package api.users.controller;
 
 import api.users.dto.UserDto;
 import api.users.service.UserService;
-import api.users.service.UserServiceImpl;
 import common.base.BaseApiController;
 import common.constraint.log.AuditLog;
 import jakarta.validation.Valid;

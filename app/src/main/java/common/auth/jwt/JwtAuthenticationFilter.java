@@ -20,11 +20,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final LoginService loginService;
-
-
-    public JwtAuthenticationFilter(LoginService loginService) {
-        this.loginService = loginService;
-    }
+    public JwtAuthenticationFilter(LoginService loginService) {this.loginService = loginService;}
 
     @Override
     protected void doFilterInternal(@NotNull HttpServletRequest req, @NotNull HttpServletResponse resp
