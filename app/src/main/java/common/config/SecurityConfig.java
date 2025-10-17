@@ -9,7 +9,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -37,17 +41,20 @@ public class SecurityConfig implements WebMvcConfigurer {
         http
                 .cors(x -> x.configurationSource(corsConfigurationSource()))
                 .csrf(CsrfConfigurer::disable)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)  // TODO. filterBefore 설정
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(authenticationEntryPoint()) //401
                         .accessDeniedHandler(accessDeniedHandler()) //403
                 )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)  // TODO. filterBefore 설정
                 .authorizeHttpRequests(request -> {
                     //관리포털 최초 사용시만 Setup 권한관리
 
                     request
                             // Swagger 등 인증 없이 허용하는 경로 처리
-                            .requestMatchers("/").permitAll()
+                            .requestMatchers("/", "/api/**").permitAll()
                             // 그 외는 인증 필요
                             .anyRequest().authenticated();
                 });
@@ -86,6 +93,11 @@ public class SecurityConfig implements WebMvcConfigurer {
     public AccessDeniedHandler accessDeniedHandler() {
         return (request, response, accessDeniedException) -> {
         };
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
 

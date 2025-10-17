@@ -1,0 +1,22 @@
+server:
+  port: 8080                    # 애플리케이션 포트 (기본: 8080)
+  servlet:
+    context-path: /             # 기본 경로 설정 (예: /api)
+
+spring:
+  application:
+    name: skeleton             # 애플리케이션 이름
+  data:
+    mongodb:
+      uri: mongodb://skeleton_user:qlqjs1212@localhost:27017/skeleton
+
+  # ⚠️ R2DBC 자동 설정 비활성화 (당신의 경우 필수)
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration
+
+logging:
+  level:
+    root: INFO                            # 전체 로그 레벨
+#    org.springframework.web: DEBUG         # 웹 요청 로그 상세
+#    org.hibernate.SQL: DEBUG               # SQL 로그
