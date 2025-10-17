@@ -15,10 +15,13 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 
+    implementation("com.auth0:java-jwt:4.5.0")
+    implementation("org.modelmapper:modelmapper:3.2.0")
+    implementation("org.jetbrains:annotations:24.0.1")
+
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
     implementation("org.apache.commons:commons-lang3:3.18.0")
-
 
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
