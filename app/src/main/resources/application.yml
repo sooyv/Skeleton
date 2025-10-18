@@ -10,7 +10,7 @@ spring:
     mongodb:
       uri: mongodb://skeleton_user:qlqjs1212@localhost:27017/skeleton
 
-  # ⚠️ R2DBC 자동 설정 비활성화 (당신의 경우 필수)
+  # ⚠️ R2DBC 자동 설정 비활성화
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration

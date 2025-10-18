@@ -5,7 +5,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
 }
 
-group = "org.example"
+group = "com.skeleton"
 version = ""
 
 repositories {
