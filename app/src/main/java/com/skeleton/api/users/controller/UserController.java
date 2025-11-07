@@ -22,12 +22,10 @@ public class UserController extends BaseApiController {
 
     // 회원가입
     @RequestMapping(value = "/signup", method = RequestMethod.POST)
-    public ResponseEntity<?> signUp(
-            @Valid @RequestBody UserDto userDto
-    ) {
-        log.info("aaa");
+    public ResponseEntity<?> signUp(@Valid @RequestBody UserDto userDto) {
         userService.signUp(userDto);
-        return rspSuccess(AuditLog.OPR_LOGIN_USER, userDto, false);
+        // 성공시 응답값, 어떤 객체를 던질건지, isLog는 카프카에 값을 보낼지 안닐지 설정하는 부분
+        return rspSuccess(AuditLog.OPR_ENROLL_USER, userDto, false);
     }
 
 }

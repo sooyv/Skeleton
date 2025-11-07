@@ -3,9 +3,16 @@ package com.skeleton.common.auth.login;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.Claim;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.skeleton.common.auth.CustomGrantedAuthority;
+import com.skeleton.common.auth.login.dto.ReissueAccessToken;
+import com.skeleton.common.constraint.RspResultCodeEnum;
+import com.skeleton.common.constraint.log.AuditLog;
 import com.skeleton.common.entity.AuthRoleEnum;
+import com.skeleton.common.exception.CommonException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -59,8 +66,7 @@ public class JwtUtil {
         return generateJWT(subject, salt, extParams, roles.stream().map(CustomGrantedAuthority::getAuthority).toList());
     }
 
-    public String generateRefreshToken(String subject, String salt) {
-
+    String generateRefreshToken(String subject, String salt) {
         Algorithm alg = Algorithm.HMAC512(salt);
         Instant now = Instant.now();
 
@@ -73,7 +79,7 @@ public class JwtUtil {
     String getSubject(String jwt) {
         String subject = JWT.decode(jwt).getSubject();
         if (subject == null) {
-            // Todo. exception 작성
+            throw new CommonException(RspResultCodeEnum.LoginFailed, AuditLog.OPR_LOGIN_USER, "토큰에 userId(subject) 미존재.", false);
         }
         return subject;
     }
@@ -81,7 +87,7 @@ public class JwtUtil {
     Claim getClaim(String jwt, String claimKey) {
         Claim claim = JWT.decode(jwt).getClaim(claimKey);
         if (claim == null || claim.isNull()) {
-            // Todo. exception 작성
+            throw new CommonException(RspResultCodeEnum.FailedReqOauth, AuditLog.VerifyToken, "claim 미존재", false);
         }
         return claim;
     }
@@ -89,7 +95,7 @@ public class JwtUtil {
     Instant getExpiresAt(String jwt) {
         Instant subject = JWT.decode(jwt).getExpiresAtAsInstant();
         if (subject == null) {
-            // Todo. exception 작성
+            throw new CommonException(RspResultCodeEnum.FailedReqOauth, AuditLog.VerifyToken, "토큰 만료", false);
         }
         return subject;
     }

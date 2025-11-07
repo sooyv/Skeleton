@@ -8,7 +8,11 @@ public class CustomGrantedAuthority implements GrantedAuthority {
 
 	private String auth;
 
-	@Override
+    public CustomGrantedAuthority(String auth) {
+        this.auth = auth;
+    }
+
+    @Override
 	public String getAuthority() {
 		return (auth.toUpperCase().startsWith(_ROLE_PREFIX))? auth : _ROLE_PREFIX + auth;
 	}

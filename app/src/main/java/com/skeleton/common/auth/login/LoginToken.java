@@ -15,7 +15,6 @@ import java.util.Date;
 @Setter
 public class LoginToken implements UserDetails {
 
-    @Serial
     private static final long serialVersionUID = -4980612368981092116L;
 
     private UserEntity userEntity;

@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.Date;
 
 @Document(collection = "users")
-@Builder
+@Builder(toBuilder = true)
 @Getter
 public class UserEntity {
     @Id

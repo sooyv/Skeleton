@@ -46,11 +46,12 @@ public class SecurityConfig implements WebMvcConfigurer {
         http
                 .cors(x -> x.configurationSource(corsConfigurationSource()))
                 .csrf(CsrfConfigurer::disable)
-//                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-//                .exceptionHandling(exception -> exception
-//                        .authenticationEntryPoint(authenticationEntryPoint()) //401
-//                        .accessDeniedHandler(accessDeniedHandler()) //403
-//                )
+//                .formLogin(AbstractHttpConfigurer::disable)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(authenticationEntryPoint()) //401
+                        .accessDeniedHandler(accessDeniedHandler()) //403
+                )
                 .authorizeHttpRequests(request -> {
                     request
                             // Swagger 등 인증 없이 허용하는 경로 처리
