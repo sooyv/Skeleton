@@ -4,7 +4,7 @@ package com.skeleton.common.base;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.skeleton.common.auth.login.LoginToken;
+import com.skeleton.common.auth.LoginToken;
 import com.skeleton.common.constraint.RspResultCodeEnum;
 import com.skeleton.common.constraint.log.AuditLog;
 import com.skeleton.common.exception.CommonException;

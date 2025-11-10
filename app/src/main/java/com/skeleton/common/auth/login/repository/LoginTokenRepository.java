@@ -12,4 +12,6 @@ public interface LoginTokenRepository extends MongoRepository<LoginTokenEntity, 
 
     Optional<LoginTokenEntity> findTokenByUserId(String userId);
 
+    Optional<LoginTokenEntity> findByAccessToken(String jwt);
+
 }

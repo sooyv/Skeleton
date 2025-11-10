@@ -1,8 +1,7 @@
 package com.skeleton.common.auth.jwt;
 
 import com.skeleton.common.auth.login.LoginService;
-import com.skeleton.common.auth.login.LoginToken;
-import com.skeleton.common.exception.CommonException;
+import com.skeleton.common.auth.LoginToken;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

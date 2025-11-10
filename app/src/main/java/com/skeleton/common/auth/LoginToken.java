@@ -1,13 +1,11 @@
-package com.skeleton.common.auth.login;
+package com.skeleton.common.auth;
 
 
-import com.skeleton.common.auth.CustomGrantedAuthority;
 import com.skeleton.common.entity.UserEntity;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.io.Serial;
 import java.util.Collection;
 import java.util.Date;
 
