@@ -20,8 +20,6 @@ public class LoginController extends BaseApiController{
 
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
-
-
         LoginResponse response = loginService.login(loginRequest);
         System.out.println("login controller");
         return rspSuccess(AuditLog.OPR_LOGIN_USER, response, false);

@@ -3,12 +3,8 @@ package com.skeleton.common.auth.login;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.Claim;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.skeleton.common.auth.CustomGrantedAuthority;
-import com.skeleton.common.auth.login.dto.ReissueAccessToken;
 import com.skeleton.common.constraint.RspResultCodeEnum;
 import com.skeleton.common.constraint.log.AuditLog;
 import com.skeleton.common.entity.AuthRoleEnum;
@@ -93,11 +89,11 @@ public class JwtUtil {
     }
 
     Instant getExpiresAt(String jwt) {
-        Instant subject = JWT.decode(jwt).getExpiresAtAsInstant();
-        if (subject == null) {
+        Instant exp = JWT.decode(jwt).getExpiresAtAsInstant();
+        if (exp == null) {
             throw new CommonException(RspResultCodeEnum.FailedReqOauth, AuditLog.VerifyToken, "토큰 만료", false);
         }
-        return subject;
+        return exp;
     }
 
     JWTVerifier jwtVerifier(String salt) {

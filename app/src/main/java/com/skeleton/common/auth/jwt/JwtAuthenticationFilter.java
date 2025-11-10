@@ -31,7 +31,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.info("인증 필터 진입 doFilterInternal");
 
         String authHeader = req.getHeader("Authorization");
-        System.out.println("token? : " + authHeader);
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;     // 필터체인 중단
+        }
+
         LoginToken loginToken = null;
 
 
@@ -47,15 +51,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     new UsernamePasswordAuthenticationToken(loginToken, loginToken.getUserEntity(), loginToken.getAuthorities())
             );
 
+            if (loginToken != null
+                    && loginToken.getJwt() != null) {
+                resp.setHeader("X-Refreshed-JWT", "Bearer " + loginToken.getJwt());
+            }
+
+            chain.doFilter(req, resp);
+
         } catch (Exception ex) {
             req.setAttribute("exception", ex);
             System.out.println("doFilterInternal exception: " + ex);
         }
-        if (loginToken != null
-                && loginToken.getJwt() != null) {
-            resp.setHeader("X-Refreshed-JWT", "Bearer " + loginToken.getJwt());
-        }
-
-        chain.doFilter(req, resp);
     }
 }
