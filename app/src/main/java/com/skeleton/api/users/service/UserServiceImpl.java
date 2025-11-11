@@ -41,7 +41,7 @@ public class UserServiceImpl implements UserService {
                 .salt(salt)
                 .email(userDto.getEmail())
                 .mobileNum(userDto.getMobileNum())
-                .authorityGroupId("R002")
+                .authorityGroupId("691288aa4fe98800d08b5c33")
                 .passwordExpiredAt(passwordExpiredAt)
                 .build();
 

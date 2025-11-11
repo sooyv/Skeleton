@@ -30,36 +30,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.info("인증 필터 진입 doFilterInternal");
 
         String authHeader = req.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;     // 필터체인 중단
-        }
-
-        LoginToken loginToken = null;
-
+//        LoginToken loginToken = null;
 
         try {
-            // 토큰이 있을 경우!!!!!
-            loginToken = loginService.verifyJwt(authHeader);
-
-            // JWT 가 갱신되었을 수도 있기 때문에 다시 꺼내서 헤더에 담기
-
+            LoginToken loginToken = loginService.verifyJwt(authHeader);
 
             // SecurityContextHolder는 요청(Request) 단위로만 인증 상태를 유지
             SecurityContextHolder.getContext().setAuthentication(
                     new UsernamePasswordAuthenticationToken(loginToken, loginToken.getUserEntity(), loginToken.getAuthorities())
             );
 
+            // JWT 가 갱신되었을 수도 있기 때문에 다시 꺼내서 헤더에 담기
             if (loginToken != null
                     && loginToken.getJwt() != null) {
                 resp.setHeader("X-Refreshed-JWT", "Bearer " + loginToken.getJwt());
             }
 
-            chain.doFilter(req, resp);
 
         } catch (Exception ex) {
             req.setAttribute("exception", ex);
             System.out.println("doFilterInternal exception: " + ex);
         }
+
+        chain.doFilter(req, resp);
     }
 }

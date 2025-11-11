@@ -4,7 +4,6 @@ import com.skeleton.common.auth.login.dto.TokenDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -14,7 +13,7 @@ import java.time.Instant;
 @Builder
 @Getter
 @Setter
-public class LoginTokenEntity {
+public class UserTokenEntity {
     private String userId;
     private String accessToken;
     private String refreshToken;

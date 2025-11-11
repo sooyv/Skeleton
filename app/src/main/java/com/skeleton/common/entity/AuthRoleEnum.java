@@ -17,7 +17,6 @@ public enum AuthRoleEnum {
     INACTIVE("비활성화"),
     PASSWORD_EXPIRED("패스워드 만료");
 
-
     private final String desc;
 
     public String getRole() {

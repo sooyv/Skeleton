@@ -30,8 +30,12 @@ public enum RspResultCodeEnum {
     LoginFailed("01", HttpStatus.UNAUTHORIZED, "로그인 인증 실패"),
     PasswordExpired("02", HttpStatus.UNAUTHORIZED, "패스워드 만료"),
     UnAuthorized("03", HttpStatus.UNAUTHORIZED, "권한이 없습니다."),
-    DuplicateUser("", HttpStatus.UNAUTHORIZED, "중복된 사용자 정보."),
-    InvalidParameter("", HttpStatus.UNAUTHORIZED, "유효하지 않은 파라미터."),
+    DuplicateUser("04", HttpStatus.UNAUTHORIZED, "중복된 사용자 정보."),
+    InvalidParameter("05", HttpStatus.UNAUTHORIZED, "유효하지 않은 파라미터."),
+    InvalidUser("06", HttpStatus.UNAUTHORIZED, "확인되지 않은 회원"),
+    // JWT
+    InvalidJwt("10", HttpStatus.UNAUTHORIZED, "유효하지 않은 JWT"),
+    ExpiredJwt("11", HttpStatus.UNAUTHORIZED, "만료된 JWT"),
 
     // 5X SERVICE_UNAVAILABLE(503, Series.SERVER_ERROR, "Service Unavailable"),
     UnProcessable("100", HttpStatus.SERVICE_UNAVAILABLE, "Unprocessable"),

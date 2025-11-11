@@ -2,7 +2,6 @@ package com.skeleton.common.auth.login;
 
 
 import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
@@ -17,7 +16,7 @@ import com.skeleton.common.auth.login.repository.LoginTokenRepository;
 import com.skeleton.common.constraint.RspResultCodeEnum;
 import com.skeleton.common.constraint.log.AuditLog;
 import com.skeleton.common.entity.AuthRoleEnum;
-import com.skeleton.common.entity.LoginTokenEntity;
+import com.skeleton.common.entity.UserTokenEntity;
 import com.skeleton.common.entity.RoleEntity;
 import com.skeleton.common.entity.UserEntity;
 import com.skeleton.common.exception.CommonException;
@@ -48,12 +47,9 @@ public class LoginService {
 
     @Transactional
     public LoginResponse login(LoginRequest loginRequest) {
-        System.out.println("login service");
+        System.out.println("login service login!!!");
         // 회원 존재 확인
-        UserEntity user = userRepository.findByUserId(loginRequest.getUserId())
-                .orElseThrow(() -> new CommonException(
-                        RspResultCodeEnum.FailedReqOauth, AuditLog.OPR_LOGIN_USER, "userId 찾을 수 없음", false)
-                );
+        UserEntity user = userRepository.findByUserId(loginRequest.getUserId());
 
         // 비밀번호 일치 확인
         if (!authpasswordEncoder.matches(loginRequest.getPassword() + user.getSalt(), user.getPassword())) {
@@ -64,10 +60,6 @@ public class LoginService {
             userRepository.save(user);
         }
 
-        // 권한 확인 (ROLE)
-        Optional<RoleEntity> roleEntity = roleRepository.findById(user.getAuthorityGroupId());
-        String role = AuthRoleEnum.valueOf(roleEntity.get().getRole()).getRole();
-
         // 로그인 성공 시
         user = user.toBuilder()
                 .loginFail(0)
@@ -75,31 +67,23 @@ public class LoginService {
                 .build();
         userRepository.save(user);
 
-        // 토큰 발급 및 저장
-        Map<String, Object> extParams = Map.of("user_id", user.getUserId());
-        List<String> roles = List.of(user.getAuthorityGroupId());
-        String accessToken = jwtUtil.generateJWT(
-                user.getUserId(),
-                user.getSalt(),
-                extParams,
-                roles
-        );
-
+        // 토큰 생성
+        LoginToken loginToken = generateLoginToken(user.getUserId());
         String refreshToken = jwtUtil.generateRefreshToken(user.getUserId(), user.getSalt());
 
-        LoginTokenEntity token = LoginTokenEntity.builder()
+        // 토큰 저장
+        UserTokenEntity token = UserTokenEntity.builder()
                 .userId(user.getUserId())
-                .accessToken(accessToken)
+                .accessToken(loginToken.getJwt())
                 .refreshToken(refreshToken)
                 .build();
         loginTokenRepository.save(token);
 
         LoginResponse loginResponse = LoginResponse.builder()
-                .accessToken(accessToken)
-//                .accessExpiresIn(accessToken)
+                .accessToken(loginToken.getJwt())
                 .userId(user.getUserId())
                 .username(user.getName())
-                .roles(role)
+                .roles(user.getAuthorityGroupId())
                 .passwordExpiredAt(user.getPasswordExpiredAt())
                 .build();
 
@@ -108,7 +92,7 @@ public class LoginService {
 
 
     public LoginToken verifyJwt(String jwt) {
-        System.out.println("verify jwt 확인: ");
+        System.out.println("verfiyJwt");
 
         // token substring
         String jwtToken = extractToken(jwt);
@@ -117,28 +101,26 @@ public class LoginService {
         String userId = jwtUtil.getSubject(jwtToken);
 
         // get userToken Entity from jwt token
-        LoginTokenEntity userToken = loginTokenRepository.findByAccessToken(jwtToken)
+        UserTokenEntity userToken = loginTokenRepository.findByAccessToken(jwtToken)
                 .orElseThrow(() -> new CommonException(RspResultCodeEnum.InvalidJwt, AuditLog.VerifyToken,  "토큰에 userId(subject) 미존재", false));
 
-        UserEntity userEntity = Optional.ofNullable(userRepository.findByUserId(userId)
-                .orElseThrow(() -> new CommonException(RspResultCodeEnum.InvalidUser, AuditLog.VerifyToken, "유저 미존재", false)));
-
-
+        UserEntity userEntity = userRepository.findByUserId(userId);
         // 현재 로그인한 사용자의 Login Token 만들어서 가지고 있기
         LoginToken loginToken = authService.loadUserByUsername(userId);
         loginToken.setJwt(jwtToken);
 
         // accessToken, refreshToken 둘 다 만료
+        Instant refreshExp = jwtUtil.getExpiresAt(userToken.getRefreshToken());
         if (jwtUtil.getExpiresAt(jwtToken).isBefore(Instant.now()) && refreshExp.isBefore(Instant.now())) {
             logout(jwt);
-            throw new CommonException(RspResultCodeEnum.ExpiredJwt, , false);
+            throw new CommonException(RspResultCodeEnum.ExpiredJwt, AuditLog.VerifyToken, false);
         }
 
         // accessToken 만료, refreshToken 유효
         if (jwtUtil.getExpiresAt(jwtToken).isBefore(Instant.now()) && !refreshExp.isBefore(Instant.now())) {
             loginToken = generateLoginToken(userToken.getUserId());
             jwtToken = loginToken.getJwt();
-            String refreshToken = jwtUtil.generateRefreshToken(user.getUserId(), user.getSalt());
+            String refreshToken = jwtUtil.generateRefreshToken(userEntity.getId(), userEntity.getSalt());
 
             // userToken accessToken 값 update
             userToken.setAccessToken(jwtToken);
@@ -146,13 +128,6 @@ public class LoginService {
             userToken.setTokenExpiredAt(jwtUtil.getExpiresAt(jwtToken));
             saveToken(userToken);
         }
-
-        // Todo. 이 내용을 loadUserByUsername 에 추가해서 LoginToken에 권한을 넣어주셈. 코드 넣어놨음
-//        List<String> authorityGroupIds = List.of(userEntity.getAuthorityGroupId());
-//        List<RoleEntity> roleEntities = roleRepository.findAllById(authorityGroupIds);
-//        Collection<CustomGrantedAuthority> authorities = roleEntities.stream()
-//                .map(role -> new CustomGrantedAuthority(role.getRoleName()))
-//                .collect(Collectors.toList());
 
         try {
             // 정상 토큰일 경우 pass
@@ -204,25 +179,25 @@ public class LoginService {
             try {
                 loginTokenRepository.deleteByUserId(userId);
             } catch (Exception e) {
-                throw new;
+                throw new CommonException(RspResultCodeEnum.FailedConnectDB, AuditLog.OPR_LOGOUT_USER, "FailedConnectDB 로그아웃 실패", false);
             }
         } catch (CommonException ex) {
-            throw new;
+            throw new CommonException(RspResultCodeEnum.InvalidJwt, AuditLog.VerifyToken, "userId(subject) 없음", false);
         }
     }
 
-    private void saveToken(LoginTokenEntity entity) {
+    private void saveToken(UserTokenEntity entity) {
         try {
             loginTokenRepository.deleteByUserId(entity.getUserId());
             loginTokenRepository.save(entity);
         } catch (Exception e) {
-            throw new Common;
+            throw new CommonException(RspResultCodeEnum.FailedConnectDB, AuditLog.OPR_DELETE_TOKEN, "토큰 삭제 오류", false);
         }
     }
 
-    private LoginToken reissueToken(String userId, LoginTokenEntity tokenEntity, String salt, String jwtToken) {
+    private LoginToken reissueToken(String userId, UserTokenEntity userTokenEntity, String salt, String jwtToken) {
         System.out.println("reissuToken 재발급 로직: ");
-        String getDbRefreshToken = tokenEntity.getRefreshToken();
+        String getDbRefreshToken = userTokenEntity.getRefreshToken();
         if (getDbRefreshToken == null || getDbRefreshToken.isBlank()) {
             throw new CommonException(RspResultCodeEnum.UnAuthorized, AuditLog.VerifyToken, "리프레시 토큰 미존재", false);
         }
@@ -235,7 +210,7 @@ public class LoginService {
         }
 
         // 새로운 accessToken, refreshToken 생성
-        Map<String, Object> extParams = Map.of("user_id", tokenEntity.getUserId());
+        Map<String, Object> extParams = Map.of("user_id", userTokenEntity.getUserId());
         Claim roles = jwtUtil.getClaim(jwtToken, "role");
         List<String> role = roles.asList(String.class);
         String newAccessToken = jwtUtil.generateJWT(userId, salt, extParams, role);
@@ -249,23 +224,23 @@ public class LoginService {
     }
 
     public LoginToken saveOrUpdateToken(String userId, TokenDto tokenDto) {
-        Optional<LoginTokenEntity> optionalLoginToken = loginTokenRepository.findTokenByUserId(userId);
+        Optional<UserTokenEntity> optionalLoginToken = loginTokenRepository.findTokenByUserId(userId);
         if (optionalLoginToken.isPresent()) {
-            LoginTokenEntity loginTokenEntity = optionalLoginToken.get();
-            loginTokenEntity.updateTokens(tokenDto);
-            loginTokenEntity = loginTokenRepository.save(loginTokenEntity);
+            UserTokenEntity loginUserTokenEntity = optionalLoginToken.get();
+            loginUserTokenEntity.updateTokens(tokenDto);
+            loginUserTokenEntity = loginTokenRepository.save(loginUserTokenEntity);
 
-            UserEntity userEntity = userRepository.findByUserId(userId)
-                    .orElseThrow(() -> new CommonException(RspResultCodeEnum.UnAuthorized, AuditLog.VerifyToken, "유저 정보 찾을 수 없음.", false));
+            UserEntity userEntity = userRepository.findByUserId(userId);
+            RoleEntity roleEntity = roleRepository.findById(userEntity.getAuthorityGroupId())
+                    .orElseThrow(() -> new CommonException(RspResultCodeEnum.UnAuthorized, AuditLog.VerifyToken, "토큰 재발급", false));
+            List<AuthRoleEnum> roles = roleEntity.getRoles();
 
-            List<String> authorityGroupIds = Collections.singletonList(userEntity.getAuthorityGroupId());  // 예를 들어 여러 권한 그룹 ID를 리스트로 가지고 있다고 가정
-            List<RoleEntity> roleEntities = roleRepository.findAllById(authorityGroupIds);
-            Collection<CustomGrantedAuthority> authorities = roleEntities.stream()
-                    .map(role -> new CustomGrantedAuthority(role.getRole()))
+            Collection<CustomGrantedAuthority> authorities = roles.stream()
+                    .map(authRoleEnum -> new CustomGrantedAuthority(authRoleEnum.getRole()))
                     .collect(Collectors.toList());
 
             LoginToken loginToken = new LoginToken(userEntity, authorities);
-            loginToken.setJwt(loginTokenEntity.getAccessToken());
+            loginToken.setJwt(loginUserTokenEntity.getAccessToken());
             loginToken.setLoginTime(userEntity.getLastLoginTime());
 
             return loginToken;

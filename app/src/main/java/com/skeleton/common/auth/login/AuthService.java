@@ -16,11 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
 
 
 @Slf4j
@@ -33,16 +29,17 @@ public class AuthService implements UserDetailsService {
     @Override
     public LoginToken loadUserByUsername(String userId) {
         // TODO. 여기에 받아온 userId 로 UserDetail 생성 후 return
-        UserEntity user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new CommonException(RspResultCodeEnum.FailedReqOauth, AuditLog.VerifyToken, "userId 찾을수없음", false));
-
-        List<String> authorityGroupIds = List.of(user.getAuthorityGroupId());
-        List<RoleEntity> roleEntities = roleRepository.findAllById(authorityGroupIds); // enum 값 List로 사용해야함, 중요한 권한을 일반 String 값으로 들고있으면 안됨 (AuthRoleEnum)
-        // List<AuthRoleEnum> userRoles = ... 이런식으로 갖고있어야함
-        List<CustomGrantedAuthority> authorities = createAuthorities(userRoles.toArray(String[]::new));
+        UserEntity user = userRepository.findByUserId(userId);
+//                .orElseThrow(() -> new CommonException(RspResultCodeEnum.FailedReqOauth, AuditLog.VerifyToken, "userId 찾을수없음", false));
+        RoleEntity roleEntity = roleRepository.findById(user.getAuthorityGroupId())
+                .orElseThrow(() -> new CommonException(RspResultCodeEnum.UnAuthorized, AuditLog.OPR_ISSUE, "권한 확인 불가", false));
+        List<AuthRoleEnum> roles = roleEntity.getRoles();
+        List<CustomGrantedAuthority> authorities = createAuthorities(roles.toArray(String[]::new));
 
         if (user.getPasswordExpiredAt().before(new Date())) {
             authorities.add(createAuthority(AuthRoleEnum.PASSWORD_EXPIRED.name()));
+        } else {
+            authorities.add(createAuthority(AuthRoleEnum.ACTIVE.name()));
         }
         return new LoginToken(user, authorities);
     }
@@ -56,7 +53,7 @@ public class AuthService implements UserDetailsService {
     }
 
     private CustomGrantedAuthority createAuthority(String role) {
-        CustomGrantedAuthority authority = new CustomGrantedAuthority();
+        CustomGrantedAuthority authority = new CustomGrantedAuthority(role);
         authority.setAuthority(role);
         return authority;
     }
